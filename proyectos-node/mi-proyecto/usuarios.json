@@ -1,0 +1,124 @@
+[
+  {
+    "id": 1,
+    "dni": "78965412",
+    "nombre": "madrid test 2",
+    "pagos": {
+      "abril": true,
+      "mayo": true,
+      "junio": true,
+      "julio": true,
+      "agosto": true,
+      "septiembre": true,
+      "octubre": true,
+      "noviembre": true,
+      "diciembre": true
+    }
+  },
+  {
+    "id": 2,
+    "dni": "74589624",
+    "nombre": "madrid tes 3",
+    "pagos": {
+      "abril": true,
+      "mayo": true,
+      "junio": true,
+      "julio": true,
+      "agosto": true,
+      "septiembre": true,
+      "octubre": true,
+      "noviembre": true,
+      "diciembre": true
+    }
+  },
+  {
+    "id": 3,
+    "dni": "74801329",
+    "nombre": "MADRID LORES JUAN",
+    "pagos": {
+      "abril": true,
+      "mayo": true,
+      "septiembre": true,
+      "octubre": true,
+      "noviembre": true,
+      "diciembre": true,
+      "julio": true,
+      "junio": true,
+      "agosto": true
+    }
+  },
+  {
+    "id": 4,
+    "dni": "87412589",
+    "nombre": " FARFAN FARFAN",
+    "pagos": {
+      "octubre": true,
+      "septiembre": true,
+      "junio": true,
+      "abril": true,
+      "julio": true,
+      "mayo": true,
+      "noviembre": true,
+      "agosto": true,
+      "diciembre": true
+    }
+  },
+  {
+    "id": 5,
+    "dni": "14732145",
+    "nombre": "JUAN CARLOS",
+    "pagos": {
+      "noviembre": true,
+      "junio": true,
+      "julio": true,
+      "abril": true,
+      "mayo": true,
+      "agosto": true,
+      "octubre": true,
+      "septiembre": true,
+      "diciembre": true
+    }
+  },
+  {
+    "id": 6,
+    "dni": "85236974",
+    "nombre": "MADRID TES 4",
+    "pagos": {
+      "agosto": true,
+      "octubre": true,
+      "noviembre": true,
+      "abril": true,
+      "mayo": true,
+      "junio": true,
+      "julio": true,
+      "septiembre": true,
+      "diciembre": true
+    }
+  },
+  {
+    "id": 7,
+    "dni": "11111111",
+    "nombre": "CICM",
+    "pagos": {
+      "julio": true,
+      "mayo": true,
+      "abril": true,
+      "junio": true,
+      "septiembre": true,
+      "octubre": true,
+      "noviembre": true,
+      "agosto": true,
+      "diciembre": true
+    }
+  },
+  {
+    "id": 8,
+    "dni": "74178965",
+    "nombre": "TEST TEST TEST",
+    "pagos": {
+      "junio": true,
+      "mayo": true,
+      "abril": true
+    }
+  }
+]

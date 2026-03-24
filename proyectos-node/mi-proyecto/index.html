@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    
+    <title>Control de Aportes PRO - 2026</title>
+    
+    <style>
+        :root {
+            --primary: #1a73e8;
+            --success: #28a745;
+            --danger: #dc3545;
+            --text: #3c4043;
+            --border: #dadce0;
+            --bg: #f8f9fa;
+        }
+
+        body {
+            font-family: "Segoe UI", system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            width: 100%;
+            max-width: 1200px;
+            margin: auto;
+            position: relative;
+        }
+
+        h1 { color: var(--primary); text-align: center; margin-bottom: 25px; }
+
+        /* FORMULARIO */
+        .form-row { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .form-row input { flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 8px; min-width: 180px; }
+        .btn-add { background-color: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+
+        /* BUSCADOR */
+        .search-box { width: 100%; padding: 12px; margin-bottom: 25px; border: 2px solid var(--primary); border-radius: 8px; box-sizing: border-box; }
+
+        /* TABLA ESCRITORIO */
+        .table-wrapper { width: 100%; overflow-x: auto; border: 1px solid #eee; border-radius: 10px; }
+        table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+        th, td { padding: 12px 8px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.85em; }
+        th { background: #f1f3f4; color: #5f6368; text-transform: uppercase; }
+
+        /* CELDAS DE PAGO */
+        .pago-cell { 
+            text-align: center; cursor: pointer; transition: 0.2s; font-weight: bold; 
+            border-left: 1px solid #eee; width: 45px; height: 45px;
+        }
+        .pago-true { background-color: #d4edda; color: #155724; }
+        .pago-true::after { content: "S/ 5"; }
+        .pago-false { background-color: #fff; color: #eee; }
+        .pago-false::after { content: "-"; }
+        .pago-cell:hover { filter: brightness(0.95); }
+
+        .meses-mobile-group { display: none; }
+
+        /* BOTÓN PDF FLOTANTE (ESTILO FINAL) */
+        .btn-pdf-flotante {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background-color: #3c4043;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 15px 25px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .btn-pdf-flotante:hover {
+            background-color: #202124;
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        /* MODALES Y TOAST */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1100; }
+        .modal { background: white; padding: 30px; border-radius: 12px; text-align: center; width: 320px; }
+        #toast { position: fixed; bottom: 20px; left: 20px; color: white; padding: 12px 20px; border-radius: 8px; display: none; z-index: 2000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+        /* RESPONSIVE MÓVIL */
+        @media screen and (max-width: 850px) {
+            table thead { display: none; }
+            table, tbody, tr, td { display: block; width: 100%; }
+            tr { margin-bottom: 20px; border: 1px solid var(--border); border-radius: 12px; background: white; }
+            td { border-bottom: 1px solid #f0f0f0; padding: 12px 15px; position: relative; }
+            td:before { content: attr(data-label); font-weight: bold; color: var(--primary); display: block; font-size: 0.7em; text-transform: uppercase; margin-bottom: 4px; }
+            .pago-cell { display: none; } 
+            .meses-mobile-group { display: block; background: #fafafa; padding: 15px; }
+            .meses-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+            .pago-cell-mobile { display: flex !important; align-items: center; justify-content: center; height: 45px; border-radius: 8px; border: 1px solid #ddd; background: white; }
+            .mes-label { font-size: 0.7em; text-align: center; display: block; margin-bottom: 3px; font-weight: bold; }
+            .btn-pdf-flotante { bottom: 20px; right: 20px; padding: 12px 20px; font-size: 0.85em; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>📊 Control de Aportes PRO</h1>
+
+        <form id="form-registro" class="form-row">
+            <input type="text" id="dni" placeholder="DNI (8 números)" required maxlength="8" pattern="\d{8}">
+            <input type="text" id="nombre" placeholder="Apellidos y Nombres" required>
+            <button type="submit" class="btn-add">Registrar</button>
+        </form>
+
+        <input type="text" id="buscador" class="search-box" placeholder="🔍 Buscar por nombre o DNI...">
+
+        <div class="table-wrapper">
+            <table id="main-table">
+                <thead>
+                    <tr>
+                        <th>N°</th>
+                        <th>DNI</th>
+                        <th>Nombres</th>
+                        <th>Cuota</th>
+                        <th>Abr</th><th>May</th><th>Jun</th><th>Jul</th><th>Ago</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dic</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpo-tabla"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <button onclick="generarPDF()" class="btn-pdf-flotante">
+        📄 Descargar Reporte PDF
+    </button>
+
+    <div class="modal-overlay" id="modal-eliminar">
+        <div class="modal">
+            <h3>¿Eliminar registro?</h3>
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button onclick="eliminarReal()" style="background:var(--danger); padding:10px; border-radius:8px; border:none; color:white; flex:1; cursor:pointer;">Eliminar</button>
+                <button onclick="cerrarModal()" style="background:#888; padding:10px; border-radius:8px; border:none; color:white; flex:1; cursor:pointer;">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+
+    <script>
+        const API_URL = "https://mi-control-de-aportes.loca.lt/usuarios";
+        const MESES = [
+            {id:'abril', lbl:'Abr'}, {id:'mayo', lbl:'May'}, {id:'junio', lbl:'Jun'},
+            {id:'julio', lbl:'Jul'}, {id:'agosto', lbl:'Ago'}, {id:'septiembre', lbl:'Sep'},
+            {id:'octubre', lbl:'Oct'}, {id:'noviembre', lbl:'Nov'}, {id:'diciembre', lbl:'Dic'}
+        ];
+        let idSeleccionado = null;
+
+        // CARGAR DATOS
+        async function cargarDatos(busqueda = "") {
+            const tabla = document.getElementById("cuerpo-tabla");
+            try {
+                const res = await fetch(API_URL);
+                let datos = await res.json();
+                tabla.innerHTML = "";
+
+                if(busqueda) {
+                    busqueda = busqueda.toLowerCase();
+                    datos = datos.filter(d => d.nombre.toLowerCase().includes(busqueda) || d.dni.includes(busqueda));
+                }
+
+                datos.forEach((u, i) => {
+                    let htmlDesktop = "";
+                    let htmlMobile = "";
+                    MESES.forEach(m => {
+                        const pagado = u.pagos && u.pagos[m.id];
+                        const clase = pagado ? 'pago-true' : 'pago-false';
+                        htmlDesktop += `<td class="pago-cell ${clase}" onclick="togglePago(${u.id},'${m.id}',${pagado})"></td>`;
+                        htmlMobile += `<div><span class="mes-label">${m.lbl}</span>
+                                       <div class="pago-cell-mobile ${clase}" onclick="togglePago(${u.id},'${m.id}',${pagado})"></div></div>`;
+                    });
+
+                    tabla.innerHTML += `
+                        <tr id="row-${u.id}">
+                            <td data-label="N°">${i + 1}</td>
+                            <td data-label="DNI">${u.dni}</td>
+                            <td data-label="Nombres"><strong>${u.nombre}</strong></td>
+                            <td data-label="Cuota">S/ 5.00</td>
+                            ${htmlDesktop}
+                            <td class="meses-mobile-group">
+                                <div class="meses-grid">${htmlMobile}</div>
+                            </td>
+                            <td data-label="Acción">
+                                <button onclick="abrirEliminar(${u.id})" style="background:none; border:none; cursor:pointer; font-size:1.2em;">🗑️</button>
+                            </td>
+                        </tr>`;
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        // ACTUALIZAR PAGO
+        async function togglePago(id, mes, estado) {
+            const res = await fetch(`${API_URL}/${id}`);
+            const u = await res.json();
+            if(!u.pagos) u.pagos = {};
+            u.pagos[mes] = !estado;
+
+            await fetch(`${API_URL}/${id}`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(u)
+            });
+            cargarDatos(document.getElementById("buscador").value);
+            mostrarToast("Pago actualizado");
+        }
+
+        // REGISTRAR
+        document.getElementById("form-registro").onsubmit = async (e) => {
+            e.preventDefault();
+            const nuevo = {
+                dni: document.getElementById("dni").value,
+                nombre: document.getElementById("nombre").value.toUpperCase(),
+                pagos: {}
+            };
+            await fetch(API_URL, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(nuevo)
+            });
+            e.target.reset();
+            cargarDatos();
+            mostrarToast("¡Registrado!");
+        };
+
+        // PDF
+        async function generarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('landscape');
+            doc.setFontSize(18);
+            doc.text("Reporte de Control de Aportes - 2026", 14, 20);
+            doc.setFontSize(10);
+            doc.text(`Generado: ${new Date().toLocaleString()}`, 14, 28);
+
+            doc.autoTable({
+                html: '#main-table',
+                startY: 35,
+                theme: 'grid',
+                includeHiddenHtml: true,
+                headStyles: { fillColor: [26, 115, 232] },
+                columns: [
+                    {header:'N°', dataKey:0}, {header:'DNI', dataKey:1}, {header:'Nombres', dataKey:2}, {header:'Cuota', dataKey:3},
+                    {header:'Abr', dataKey:4}, {header:'May', dataKey:5}, {header:'Jun', dataKey:6}, {header:'Jul', dataKey:7},
+                    {header:'Ago', dataKey:8}, {header:'Sep', dataKey:9}, {header:'Oct', dataKey:10}, {header:'Nov', dataKey:11}, {header:'Dic', dataKey:12}
+                ],
+                didParseCell: function(data) {
+                    if (data.section === 'body' && data.column.index >= 4 && data.column.index <= 12) {
+                        data.cell.text = data.cell.raw.classList.contains('pago-true') ? ["S/ 5.00"] : ["-"];
+                    }
+                }
+            });
+            doc.save("Reporte_Aportes_2026.pdf");
+            mostrarToast("PDF generado con éxito");
+        }
+
+        // ELIMINAR
+        function abrirEliminar(id) { idSeleccionado = id; document.getElementById("modal-eliminar").style.display="flex"; }
+        function cerrarModal() { document.getElementById("modal-eliminar").style.display="none"; }
+        async function eliminarReal() {
+            await fetch(`${API_URL}/${idSeleccionado}`, { method: 'DELETE' });
+            cerrarModal();
+            cargarDatos();
+            mostrarToast("Eliminado", "#dc3545");
+        }
+
+        function mostrarToast(m, c="#28a745") {
+            const t = document.getElementById("toast");
+            t.textContent = m; t.style.background = c; t.style.display = "block";
+            setTimeout(() => t.style.display="none", 2500);
+        }
+
+        document.getElementById("buscador").oninput = (e) => cargarDatos(e.target.value);
+        cargarDatos();
+    </script>
+</body>
+</html>
